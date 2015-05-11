@@ -1,0 +1,316 @@
+# Snake import javax.swing.*;
+    import java.util.ArrayList;
+    import java.awt.BorderLayout;
+    import java.awt.Color;
+    import java.awt.FlowLayout;
+    import java.awt.Font;
+    import java.awt.Graphics;
+    import java.awt.event.*;
+
+    public class Snake extends JFrame
+    {	
+	final static int Width = 340;
+    final static int Height = 450;
+	final static int nodeWidth = 10;
+	final static int nodeHeight = 10;
+	
+    //蛇身的坐标
+	static int x;
+	static int y;
+
+	//食物的坐标
+	static int fx;
+	static int fy;
+	static ArrayList<Node>snakebody;   //设置蛇身
+	static int key ;
+	static int l;
+	static int t;
+	static int speed;
+	static Timer timer;
+	static JLabel b=new JLabel(""+l);	//计分数的
+	static JFrame sframe;//框架
+	
+	//设置蛇的坐标
+	public static class Node 
+	{
+	    int x;
+	    int y;
+	    int s;
+	    Node(int x, int y) 
+	     {
+	        this.x = x;
+	        this.y = y;        
+	     }
+	}
+	
+	//游戏面板
+	public static class Gamepanel extends JPanel
+    {	
+ 	    public Gamepanel()
+		{
+ 		    JPanel o=new JPanel();
+ 		    JLabel a=new JLabel("SCORE");
+ 			o.add(a);
+ 			o.add(b);
+ 			o.setLayout(new FlowLayout(FlowLayout.LEFT,30,0));
+ 	        add(o,BorderLayout.NORTH);
+			timer=new Timer(speed,new TimerListener());
+			timer.start();
+		}   
+ 	    
+       protected void paintComponent(Graphics g)
+       {  
+    	   super.paintComponent(g);
+
+    	   //将游戏背景填充成白色
+    	   g.setColor(Color.WHITE);
+    	   g.fillRect(0,25,340,450);
+    	   switch(key)
+    	   {
+    	      case 0:  eatfood(x,y+10);y=y+10;break;
+    	      case 1:  eatfood(x,y-10);y=y-10;break;
+    	      case 2:  eatfood(x-10,y);x=x-10;break;
+    	      case 3:  eatfood(x+10,y);x=x+10;break;
+    	      default: ;     
+    	   }  
+    	   
+    	   snakebody.remove(snakebody.size()-1);
+          //模拟移动，头部加一个尾部减一个
+    	   
+    	   //如果吃上食物，则重新产生食物
+    	   if(x==fx&&y==fy)
+    	   {
+    		   eatfood(fx,fy);
+    		   l++;
+    		   changefood();
+    	   }
+    	   
+           //刷新时间
+    	   speed=80-(l/10)*10;
+    	   //使速度改变
+    	   timer.setDelay(speed);
+    	   //将蛇头和蛇身还有食物填充在白色的背景下
+    	   g.setColor(Color.YELLOW);
+    	   drawNode(g,snakebody.get(0));
+    	   g.setColor(Color.BLACK);
+    	   for(int i=1;i<snakebody.size();i++)
+    		 drawNode(g,snakebody.get(i));
+    	   Node food=new Node(fx,fy);
+      	   g.setColor(Color.GREEN);
+      	   drawNode(g,food);
+    	   if(!checkifdead())
+      	   { 
+    	      timer.stop();
+    	      System.exit(0);
+      	   }   
+       }       
+       class TimerListener implements ActionListener
+     	{	
+			public void actionPerformed(ActionEvent e)
+			{
+				repaint();	
+				b.setText(""+l);
+			}
+   		}
+     }
+	//蛇下一步的方向
+	public static Node nextstep(int fx,int fy)
+	{
+		Node n=new Node(0,0);
+		if(key==0)
+ 	   {
+ 		   n.x=fx;
+ 		   n.y=fy+10;
+ 	   }   
+ 	   if(key==1)
+ 	   {
+ 		  n.x=fx;
+		  n.y=fy-10;
+ 	   }   
+ 	   if(key==2)
+ 	   {
+ 		   n.x=fx-10;
+		   n.y=fy;
+ 	   }   
+ 	   if(key==3)
+ 	   {
+ 		   n.x=fx+10;
+		   n.y=fy;
+ 	   }  
+ 	   return n;
+	}
+	
+	//结束判断，是否撞到边界或是否撞到自己
+	public static boolean checkifdead()
+	{
+		if(x>(Width-25)||(y>Height-70)||x<0||y<25||ifinbody(nextstep(x,y).x,nex   tstep(x,y).y))
+		{
+			if(x>(Width-25)||y>(Height-70)||x<0||y<25)
+			{
+				x=55;
+				y=55;
+			}
+			return false;
+		}
+		return true;
+	}
+	//判断蛇身是否撞到自己
+	public static boolean ifinbody(int fx,int fy)
+	{
+		for(int i=1;i<snakebody.size();i++)
+		{
+			if(fx==snakebody.get(i).x&&fy==snakebody.get(i).y)
+			return true;
+		}
+		return false;
+	}
+	
+	//画新加的头
+	public static void drawNode(Graphics g, Node n)
+	{
+        g.fillRect(n.x,n.y,nodeWidth,nodeHeight);
+    }
+	
+	//如果吃上食物，则在头部加一个
+	public static void eatfood(int x,int y)
+	{
+		Node n=new Node(x,y);
+		snakebody.add(0,n);		
+	}
+	//改变食物的坐标
+	public static void changefood()
+	{
+			fx=25+(int)(Math.random()*10)*10;
+ 	        fy=25+(int)(Math.random()*20)*10;	
+	}
+
+	//开始游戏
+	public static void startgame()
+	{ 
+		 x=55;
+		 y=55;
+
+		 //随机产生食物的坐标
+		 fx=25+(int)(Math.random()*10)*10;
+		 fy=25+(int)(Math.random()*20)*10;
+		 snakebody=new ArrayList<Node>();
+
+		 //蛇一开始往又走
+		 key = 3;
+		 l=0;
+
+		 //设置空格暂停的标志
+		 t=0;
+		 speed=80;
+		 Node n=new Node(50,50);
+		 //设置蛇身的坐标
+ 		 snakebody.add(n);
+
+ 		 //标题
+	     sframe = new JFrame("GreedySnake");
+	     Gamepanel panel=new Gamepanel();
+
+	     //给框架设置监听器
+	     sframe.addKeyListener
+	     (
+	    		 new KeyListener()
+	    		 {
+	    		    public void keyPressed(KeyEvent e) 
+	    		    {
+	    		          switch (e.getKeyCode())
+	    		          {
+	    		            case KeyEvent.VK_DOWN:  
+	    		            	                    if(ifinbody(x,y+10)==false) 
+	    		            	                          key=0; break;
+	  	                    case KeyEvent.VK_UP:    
+	  	                    	                    if(ifinbody(x,y-10)==false)
+	  	                    		                      key=1;  break;
+	  	                    case KeyEvent.VK_LEFT:  
+	  	                    	                    if(ifinbody(x-10,y)==false)
+	  	                    		                      key=2; break;
+	  	                    case KeyEvent.VK_RIGHT: 
+	  	                    	                    if(ifinbody(x+10,y)==false)
+	  	                    	                           key=3; break;
+	  	                    //空格为暂停	                           
+	  	                    case KeyEvent.VK_SPACE:
+	  	                    if(t==0)
+	  	                    {
+	  	                    	timer.stop();
+	  	                    	t=1;
+	  	                    }
+	  	                    else 
+	  	                    {
+	  	                    	timer.start();
+	  	                    	t=0;
+	  	                    }
+	  	                    break;
+	    		            default: ;
+	    		          }
+	    		      }
+						public void keyTyped(KeyEvent e) {}
+						public void keyReleased(KeyEvent e) {}
+	    		    }	 
+	      );
+	     sframe.add(panel);
+
+	     //设置菜单框
+		 JMenuBar menubar = new JMenuBar();
+		 sframe.setJMenuBar(menubar);
+		 JMenu menu1=new JMenu("Game");
+		 JMenu menu2=new JMenu("Help");
+		 menubar.add(menu1);
+		 menubar.add(menu2);
+
+		 //分别写三个按钮的监听器
+		 JMenuItem newgame=new JMenuItem("New Game");
+			 menu1.add(newgame);
+			newgame.addActionListener
+			(
+					      new ActionListener() 
+					{
+						public void actionPerformed( ActionEvent event)
+				           {
+							 newgame();	 
+				           }
+					}
+	        );
+			 JMenuItem moption=new JMenuItem("Quit");
+			 menu1.add(moption);
+			moption.addActionListener
+			(
+					      new ActionListener() 
+					{
+				           public void actionPerformed( ActionEvent event)
+				           {
+				        	   System.exit(0);
+				           }
+					}
+	        );
+		 JMenuItem about=new JMenuItem("About");
+		 menu2.add(about);
+		 about.addActionListener
+		 (
+				  new ActionListener() 
+					{
+				           public void actionPerformed( ActionEvent event )
+					   { 
+				           timer.stop();
+				           JOptionPane.showMessageDialog(null,"GreedySnake\n"+"Version 1.0\n"+"Made by Sherlock");
+				           timer.start();
+					   }
+					}
+		 );
+		 
+		sframe.pack();
+		sframe.setTitle("GreedySnake");
+		sframe.setSize(Width,Height);
+		sframe.setLocationRelativeTo(null);
+		sframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		sframe.setVisible(true);	
+	}
+	
+	public static void main(String[] args)
+	{
+		startgame();  
+	}
+}	
